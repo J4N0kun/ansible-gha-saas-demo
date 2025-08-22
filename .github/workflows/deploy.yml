@@ -1,4 +1,4 @@
-name: Deploy with Ansible and expose publicly
+name: Deploy with Ansible in SaaS mode
 
 on:
   push:
@@ -9,76 +9,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Install Ansible + dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y ansible python3-docker unzip curl jq
-          ansible-galaxy collection install community.docker        
+          ansible-galaxy collection install community.docker
 
-      - name: Lancer le playbook
+      - name: Run Ansible playbook
         run: ansible-playbook -i inventory.ini deploy.yml
 
-      - name: Installer ngrok
+      - name: Download & setup Ngrok
+        run: |
+          curl -s https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz -o ngrok.tgz
+          tar -xzf ngrok.tgz
+          sudo mv ngrok /usr/local/bin/
+          ngrok version
         env:
           NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
+
+      - name: Start Ngrok tunnel (HTTP on port 8080)
         run: |
-          # Télécharger binaire ngrok (v3 puis fallback v2)
-          set -e
-          if curl -fsSL -o ngrok.tgz https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-linux-amd64.tgz; then
-            tar -xzf ngrok.tgz
-          else
-            curl -fsSL -o ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
-            unzip -o ngrok.zip
-          fi
-          sudo mv ngrok /usr/local/bin/ngrok
-          ngrok config add-authtoken "$NGROK_AUTHTOKEN"
+          nohup ngrok http 8080 --log=stdout > ngrok.log &
+          sleep 5
+          echo "----- Ngrok Tunnel Info -----"
+          curl --silent http://127.0.0.1:4040/api/tunnels \
+            | jq -r '.tunnels[] | select(.proto=="https") | .public_url' \
+            | head -n1
 
-          - name: Démarrer le tunnel et publier l'URL
-          id: tunnel
-          shell: bash
-          run: |
-            set -euo pipefail
-            nohup ngrok http 8080 --log=stdout > ngrok.log 2>&1 &
-        
-            # Attendre que l'API locale ngrok (4040) soit dispo
-            for i in $(seq 1 30); do
-              sleep 1
-              if curl -fsS http://127.0.0.1:4040/api/tunnels >/dev/null 2>&1; then
-                break
-              fi
-            done
-        
-            # Récupérer la première URL https via l'API locale
-            URL="$(curl -s http://127.0.0.1:4040/api/tunnels \
-              | jq -r '.tunnels[] | select(.proto=="https") | .public_url' \
-              | head -n1)"
-        
-            # Fallback si l'API n'est pas prête : extraire depuis le log
-            if [ -z "$URL" ] && [ -f ngrok.log ]; then
-              URL="$(grep -oE 'https://[0-9a-zA-Z.-]*ngrok[^ ]*' ngrok.log | head -n1 || true)"
-            fi
-        
-            test -n "$URL" || { echo "Impossible de trouver l'URL publique ngrok"; exit 1; }
-        
-            echo "$URL" > public_url.txt
-            echo "Public URL: $URL"
-            echo "public_url=$URL" >> "$GITHUB_OUTPUT"
-            echo "🔗 Public URL: $URL" >> "$GITHUB_STEP_SUMMARY"
-        
-      - name: Uploader l'URL publique
-        uses: actions/upload-artifact@v4
-        with:
-          name: public-url
-          path: public_url.txt
-
-      - name: Uploader la page web
+      - name: Upload generated website
         uses: actions/upload-artifact@v4
         with:
           name: website
           path: /tmp/html/index.html
-
-      - name: Laisser le tunnel ouvert 10 minutes (démo)
-        run: sleep 600
