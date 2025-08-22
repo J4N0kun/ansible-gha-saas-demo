@@ -1,5 +1,5 @@
 ---
-- name: Générer site HTML interactif avec build GitHub Actions et footer fixe
+- name: Générer site HTML interactif avec footer fixe et boutons sous l'image
   hosts: localhost
   connection: local
   gather_facts: no
@@ -17,7 +17,7 @@
         path: ./site
         state: directory
 
-    - name: Générer page index.html interactive avec footer fixe
+    - name: Générer page index.html interactive
       copy:
         dest: ./site/index.html
         content: |
@@ -32,7 +32,7 @@
                 background-color: #f4f4f9;
                 color: #333;
                 margin: 0;
-                padding-bottom: 80px; /* pour le footer */
+                padding-bottom: 80px; /* espace pour footer */
                 display: flex;
                 flex-direction: column;
                 align-items: center;
@@ -49,7 +49,7 @@
                 text-align: center;
               }
               button {
-                margin-top: 1em;
+                margin-top: 0.5em;
                 padding: 0.5em 1em;
                 font-size: 1em;
                 border: none;
@@ -63,7 +63,7 @@
               }
               a {
                 display: inline-block;
-                margin-top: 1em;
+                margin-top: 0.5em;
                 text-decoration: none;
                 color: #3498db;
               }
@@ -94,9 +94,9 @@
             <h1>Site déployé via Ansible + GitHub Actions</h1>
             <div class="info">
               <p>Accessible publiquement grâce à GitHub Pages !</p>
+              <img src="{{ image_url }}" alt="Image démo"><br>
               <button onclick="location.reload()">🔄 Rafraîchir la page</button>
               <a href="{{ repo_url }}" target="_blank">Voir le dépôt GitHub</a>
-              <img src="{{ image_url }}" alt="Image démo"><br>
             </div>
             <footer>
               Déploiement : {{ deploy_date }} | Commit : {{ git_commit }} | Build #{{ github_run_number }}
