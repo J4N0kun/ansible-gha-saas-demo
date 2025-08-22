@@ -1,11 +1,11 @@
-name: Deploy with Ansible + Ngrok
+name: Deploy GitHub Pages
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  ansible-deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -14,52 +14,18 @@ jobs:
         uses: actions/checkout@v4
 
       # 2️⃣ Installer Ansible + dépendances
-      - name: Install Ansible + dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ansible python3-docker unzip curl jq
-          ansible-galaxy collection install community.docker
+      - name: Install Ansible
+        run: sudo apt-get update && sudo apt-get install -y ansible
 
       # 3️⃣ Lancer le playbook pour créer le conteneur web
-      - name: Run Ansible playbook
-        run: ansible-playbook -i inventory.ini deploy.yml
+      - name: Run Ansible playbook to generate HTML
+        run: ansible-playbook deploy.yml
 
-      # 4️⃣ Télécharger et configurer Ngrok
-      - name: Download & setup Ngrok
-        run: |
-          curl -s https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz -o ngrok.tgz
-          tar -xzf ngrok.tgz
-          sudo mv ngrok /usr/local/bin/
-          ngrok config add-authtoken $NGROK_AUTHTOKEN
-          ngrok version
-        env:
-          NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
-
-      # 5️⃣ Lancer Ngrok et récupérer l'URL publique avec retry
-      - name: Start Ngrok tunnel (HTTP on port 8080)
-        run: |
-          nohup ngrok http 8080 --log=stdout > ngrok.log &
-          # attendre que le port du conteneur soit joignable
-          for i in {1..15}; do
-            nc -z localhost 8080 && break
-            echo "Waiting for container on port 8080..."
-            sleep 2
-          done
-          # attendre que l'API Ngrok renvoie le tunnel
-          for i in {1..15}; do
-            URL=$(curl --silent http://127.0.0.1:4040/api/tunnels \
-              | jq -r '.tunnels[] | select(.proto=="https") | .public_url')
-            if [ -n "$URL" ]; then
-              echo "Ngrok public URL: $URL"
-              break
-            fi
-            echo "Waiting for Ngrok API..."
-            sleep 2
-          done
-
-      # 6️⃣ Upload de la page HTML générée
-      - name: Upload generated website (artefact)
-        uses: actions/upload-artifact@v4
+      # 4️⃣ Déployer la page HTML sur GitHub Pages
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          name: website
-          path: /tmp/html/index.html
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          # Optionnel : branch cible, défaut gh-pages
+          # publish_branch: gh-pages
