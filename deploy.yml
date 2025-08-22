@@ -21,3 +21,8 @@
               <p>Accessible publiquement grâce à GitHub Pages !</p>
             </body>
           </html>
+
+    - name: Créer fichier .nojekyll
+      copy:
+        dest: ./site/.nojekyll
+        content: ""
