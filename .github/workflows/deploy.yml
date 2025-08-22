@@ -22,4 +22,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./site
       - name: Show GitHub Pages URL
-        run: echo "✅ Site accessible ici: https://$GITHUB_REPOSITORY.github.io/"
+        run: echo "✅ Site accessible ici --> https://$GITHUB_REPOSITORY.github.io/"
