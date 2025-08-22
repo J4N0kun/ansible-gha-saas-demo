@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Démo Ansible + GitHub Pages</title>
-  <style>
-    body { font-family: sans-serif; margin: 2em; text-align: center; }
-    img { max-width: 80%; height: auto; margin-top: 2em; }
-    a.button { display: inline-block; margin: 1em; padding: 0.5em 1em; background: #007bff; color: white; text-decoration: none; border-radius: 4px; }
-    a.button:hover { background: #0056b3; }
-  </style>
+    <meta charset="UTF-8">
+    <title>Démo Ansible GitHub Pages</title>
 </head>
 <body>
-  <h1>Démo Ansible + GitHub Pages</h1>
-  <p>Date de déploiement : {{ deploy_date }}</p>
-  <p>Commit : {{ commit_hash }}</p>
-  <img src="{{ demo_image }}" alt="Image de démo">
-  <br>
-  <a href="" onclick="location.reload();" class="button">🔄 Rafraîchir la page</a>
-  <a href="https://github.com/{{ github_repo }}" class="button" target="_blank">Voir le dépôt GitHub</a>
+    <h1>Bienvenue sur la démo Ansible</h1>
+    <p>Date de déploiement : {{ date }}</p>
+    <p>Commit Git : {{ commit }}</p>
+    <img src="https://preview.redd.it/oynqiuq4a9k51.jpg?width=640&crop=smart&auto=webp&s=fb64945028dd789dc71031040a114f95025e65d7" alt="Image démo">
+    <br>
+    <a href="#">🔄 Rafraîchir la page</a> |
+    <a href="https://github.com/J4N0kun/ansible-gha-saas-demo">Voir le dépôt GitHub</a>
 </body>
 </html>

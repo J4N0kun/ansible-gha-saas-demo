@@ -1,30 +1,40 @@
 ---
 - name: Déploiement d’un site statique avec GitHub Pages
   hosts: localhost
-  gather_facts: no
+  gather_facts: false
   vars:
     site_dir: "./site"
-    html_file: "{{ site_dir }}/index.html"
-    image_url: "https://preview.redd.it/oynqiuq4a9k51.jpg?width=640&crop=smart&auto=webp&s=fb64945028dd789dc71031040a114f95025e65d7"
+    template_file: "./template/index.j2"
+    output_file: "{{ site_dir }}/index.html"
 
   tasks:
-
     - name: Créer le dossier site s'il n'existe pas
       file:
         path: "{{ site_dir }}"
         state: directory
 
-    - name: Récupérer le commit courant
+    - name: Récupérer le commit Git courant
       command: git rev-parse --short HEAD
       register: git_commit
-      ignore_errors: yes
+
+    - name: Générer la date courante
+      set_fact:
+        deploy_date: "{{ lookup('pipe','date +%Y-%m-%d_%H-%M-%S') }}"
 
     - name: Générer le fichier HTML via template Jinja2
       template:
-        src: "templates/index.html.j2"
-        dest: "{{ html_file }}"
+        src: "{{ template_file }}"
+        dest: "{{ output_file }}"
       vars:
-        commit_hash: "{{ git_commit.stdout | default('inconnu') }}"
-        deploy_date: "{{ lookup('pipe','date +%d/%m/%Y %H:%M:%S') }}"
-        github_repo: "{{ lookup('env','GITHUB_REPOSITORY') }}"
-        demo_image: "{{ image_url }}"
+        commit: "{{ git_commit.stdout }}"
+        date: "{{ deploy_date }}"
+
+    - name: Vérifier que le fichier HTML est créé
+      stat:
+        path: "{{ output_file }}"
+      register: html_stat
+
+    - name: Afficher un message si le fichier est créé
+      debug:
+        msg: "Le fichier HTML a été généré avec succès : {{ output_file }}"
+      when: html_stat.stat.exists
