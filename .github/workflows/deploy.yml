@@ -13,14 +13,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Installer Ansible et dépendances
+      # 2️⃣ Installer Ansible + dépendances
       - name: Install Ansible + dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y ansible python3-docker unzip curl jq
           ansible-galaxy collection install community.docker
 
-      # 3️⃣ Lancer le playbook
+      # 3️⃣ Lancer le playbook pour créer le conteneur web
       - name: Run Ansible playbook
         run: ansible-playbook -i inventory.ini deploy.yml
 
@@ -35,11 +35,16 @@ jobs:
         env:
           NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
 
-      # 5️⃣ Lancer le tunnel Ngrok et récupérer l'URL publique
+      # 5️⃣ Lancer Ngrok après que le conteneur soit prêt
       - name: Start Ngrok tunnel (HTTP on port 8080)
         run: |
           nohup ngrok http 8080 --log=stdout > ngrok.log &
-          sleep 5
+          # attendre que le port 8080 soit joignable
+          for i in {1..15}; do
+            nc -z localhost 8080 && break
+            echo "Waiting for port 8080..."
+            sleep 2
+          done
           echo "----- Ngrok Tunnel Info -----"
           curl --silent http://127.0.0.1:4040/api/tunnels \
             | jq -r '.tunnels[] | select(.proto=="https") | .public_url' \
