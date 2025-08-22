@@ -1,8 +1,12 @@
 ---
-- name: Générer site HTML pour GitHub Pages
+- name: Générer site HTML dynamique pour GitHub Pages
   hosts: localhost
   connection: local
   gather_facts: no
+
+  vars:
+    deploy_date: "{{ lookup('pipe', 'date +\"%Y-%m-%d %H:%M:%S\"') }}"
+    git_commit: "{{ lookup('pipe', 'git rev-parse --short HEAD') }}"
 
   tasks:
     - name: Créer répertoire site
@@ -10,15 +14,17 @@
         path: ./site
         state: directory
 
-    - name: Générer page index.html
+    - name: Générer page index.html dynamique
       copy:
         dest: ./site/index.html
         content: |
           <html>
             <head><title>Démo Ansible + GitHub Pages</title></head>
             <body>
-              <h1>Site déployé via Ansible + GitHub Actions</h1>
-              <p>Accessible publiquement grâce à GitHub Pages !</p>
+              <h1>Site deploye via Ansible + GitHub Actions</h1>
+              <p>Date de déploiement : {{ deploy_date }}</p>
+              <p>Commit : {{ git_commit }}</p>
+              <p>Accessible publiquement grace a GitHub Pages !</p>
             </body>
           </html>
 
