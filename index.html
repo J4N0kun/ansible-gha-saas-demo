@@ -8,12 +8,11 @@
       font-family: Arial, sans-serif;
       background-color: #f4f4f9;
       color: #333;
+      margin: 0;
+      padding-bottom: 80px; /* pour le footer */
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      margin: 0;
     }
     h1 {
       color: #2c3e50;
@@ -54,18 +53,30 @@
       border-radius: 10px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
+    footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: #2c3e50;
+      color: white;
+      text-align: center;
+      padding: 10px 0;
+      font-size: 0.9em;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.2);
+    }
   </style>
 </head>
 <body>
   <h1>Site déployé via Ansible + GitHub Actions</h1>
   <div class="info">
-    <p><strong>Date de déploiement :</strong> 2025-08-22 12:05:38</p>
-    <p><strong>Commit :</strong> 04e183f</p>
-    <p><strong>Numéro de build :</strong> 26</p>
     <p>Accessible publiquement grâce à GitHub Pages !</p>
     <button onclick="location.reload()">🔄 Rafraîchir la page</button>
     <a href="https://github.com/J4N0kun/ansible-gha-saas-demo" target="_blank">Voir le dépôt GitHub</a>
-    <img src="https://preview.redd.it/oynqiuq4a9k51.jpg?width=640&crop=smart&auto=webp&s=fb64945028dd789dc71031040a114f95025e65d7" alt="Image démo">
+    <img src="https://preview.redd.it/oynqiuq4a9k51.jpg?width=640&crop=smart&auto=webp&s=fb64945028dd789dc71031040a114f95025e65d7" alt="Image démo"><br>
   </div>
+  <footer>
+    Déploiement : 2025-08-22 12:11:33 | Commit : 251b86d | Build #27
+  </footer>
 </body>
 </html>
