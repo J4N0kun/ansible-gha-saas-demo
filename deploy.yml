@@ -3,11 +3,13 @@
   hosts: all
   become: yes
   tasks:
+
     - name: Installer Docker
-      apt:
-        name: docker.io
-        state: present
-        update_cache: yes
+    apt:
+      name: docker.io
+      state: present
+      update_cache: yes
+    when: ansible_virtualization_type != "docker"
 
     - name: S'assurer que Docker est démarré
       service:
