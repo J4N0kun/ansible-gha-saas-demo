@@ -31,4 +31,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          ansible-playbook -i localhost, deploy.yml
+          ansible-playbook -i inventory.ini deploy.yml
