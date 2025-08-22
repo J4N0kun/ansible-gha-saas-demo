@@ -1,43 +1,40 @@
-name: Déploiement Ansible -> GitHub Pages
+name: Déploiement GitHub Pages via Ansible
 
 on:
   push:
     branches:
-      - main  # Déclenchement sur push sur main
-  workflow_dispatch:
+      - main  # ou master selon ton repo
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout du repo
+      # 1️⃣ Checkout du repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Installer Python et uv
-        run: |
-          curl -sSf https://install.python-poetry.org | python3 -
-          export PATH="$HOME/.local/bin:$PATH"
-          uv install ansible
+      # 2️⃣ Installer Python et Ansible
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
 
-      - name: Vérifier uv et ansible
+      - name: Installer Ansible
         run: |
-          uv --version
-          ansible --version
+          python -m pip install --upgrade pip
+          pip install ansible jinja2
 
+      # 3️⃣ Exécuter le playbook pour générer le site
       - name: Exécuter le playbook Ansible
-        run: |
-          uv run ansible-playbook -i localhost, deploy.yml
+        run: ansible-playbook deploy.yml
 
+      # 4️⃣ Publier le contenu de ./site sur gh-pages
       - name: Publier sur GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./site
+          # Le token Actions est automatiquement fourni par GitHub
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Branche cible pour GitHub Pages
           publish_branch: gh-pages
-          user_name: github-actions
-          user_email: github-actions@users.noreply.github.com
-
-      - name: Afficher l'URL GitHub Pages
-        run: |
-          echo "https://$(echo $GITHUB_REPOSITORY | cut -d'/' -f1).github.io/$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)/"

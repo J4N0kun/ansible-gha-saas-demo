@@ -1,53 +1,30 @@
+---
+- name: Déploiement d’un site statique avec GitHub Pages
+  hosts: localhost
+  gather_facts: no
+  vars:
+    site_dir: "./site"
+    html_file: "{{ site_dir }}/index.html"
+    image_url: "https://preview.redd.it/oynqiuq4a9k51.jpg?width=640&crop=smart&auto=webp&s=fb64945028dd789dc71031040a114f95025e65d7"
+
   tasks:
 
-    - name: Vérifier si un dépôt Git existe
-      ansible.builtin.stat:
-        path: ".git"
-      register: git_repo
-
-    - name: Initialiser le dépôt Git si nécessaire
-      ansible.builtin.command: git init
-      when: not git_repo.stat.exists
-
-    - name: Ajouter l’origine distante si elle n’existe pas
-      ansible.builtin.command: git remote add origin {{ repo_url }}
-      register: add_origin
-      failed_when: add_origin.rc not in [0, 3]  # 3 = remote already exists
-      ignore_errors: yes
-
-    - name: Vérifier la version d'Ansible installée avec uv
-      ansible.builtin.command: ansible --version
-      register: ansible_version
-      changed_when: false
-      ignore_errors: yes
-
-    - name: Afficher la version d'Ansible
-      ansible.builtin.debug:
-        msg: >
-          {% if ansible_version is defined and ansible_version.stdout is defined %}
-            Ansible est bien installé via uv : {{ ansible_version.stdout.split('\n')[0] }}
-          {% else %}
-            Impossible de récupérer la version d'Ansible
-          {% endif %}
-
-    - name: Créer le répertoire du site
-      ansible.builtin.file:
+    - name: Créer le dossier site s'il n'existe pas
+      file:
         path: "{{ site_dir }}"
         state: directory
 
-    - name: Générer la page index.html depuis un template
-      ansible.builtin.template:
-        src: templates/index.html.j2
-        dest: "{{ site_dir }}/index.html"
-        mode: "0644"
-        
-    - name: Ajouter les fichiers au commit
-      ansible.builtin.command: git add .
+    - name: Récupérer le commit courant
+      command: git rev-parse --short HEAD
+      register: git_commit
+      ignore_errors: yes
 
-    - name: Commit initial
-      ansible.builtin.command: git commit -m "Initial commit"
-      ignore_errors: true
-
-    - name: Pousser sur GitHub
-      ansible.builtin.command: git push -u origin main
-      ignore_errors: true
+    - name: Générer le fichier HTML via template Jinja2
+      template:
+        src: "templates/index.html.j2"
+        dest: "{{ html_file }}"
+      vars:
+        commit_hash: "{{ git_commit.stdout | default('inconnu') }}"
+        deploy_date: "{{ lookup('pipe','date +%d/%m/%Y %H:%M:%S') }}"
+        github_repo: "{{ lookup('env','GITHUB_REPOSITORY') }}"
+        demo_image: "{{ image_url }}"
