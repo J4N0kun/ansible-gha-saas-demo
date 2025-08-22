@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>🚀 Déploiement GitHub Pages</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background: #f9f9f9; }
+    h1 { color: #2c3e50; }
+    .meta { font-size: 14px; color: #555; margin-bottom: 20px; }
+    a { display: inline-block; margin: 8px 0; padding: 8px 12px; background: #3498db; color: white; text-decoration: none; border-radius: 6px; }
+    a:hover { background: #2980b9; }
+    .footer { margin-top: 40px; text-align: center; }
+  </style>
+</head>
+<body>
+  <h1>🚀 Déploiement GitHub Pages réussi !</h1>
+
+  <div class="meta">
+    <p>📅 Déployé le : <strong>{{ build_date }}</strong></p>
+    <p>🔖 Commit : <code>{{ commit_sha }}</code></p>
+  </div>
+
+  <p><a href="{{ repo_url }}" target="_blank">Voir le dépôt GitHub</a></p>
+  <p><a href="{{ pages_url }}" target="_blank">Voir la page GitHub Pages</a></p>
+
+  <div class="footer">
+    <img src="https://preview.redd.it/oynqiuq4a9k51.jpg?width=640&crop=smart&auto=webp&s=fb64945028dd789dc71031040a114f95025e65d7" alt="Funny image" width="400"><br>
+    <a href="{{ repo_url }}" target="_blank">🔄 Rafraîchir la page</a>
+  </div>
+</body>
+</html>

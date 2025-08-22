@@ -1,110 +1,14 @@
----
-- name: Générer site HTML interactif avec footer fixe et boutons sous l'image
-  hosts: localhost
+- hosts: localhost
   connection: local
   gather_facts: no
 
-  vars:
-    deploy_date: "{{ lookup('pipe', 'date +\"%Y-%m-%d %H:%M:%S\"') }}"
-    git_commit: "{{ lookup('pipe', 'git rev-parse --short HEAD') }}"
-    repo_url: "https://github.com/${GITHUB_REPOSITORY}"
-    image_url: "https://preview.redd.it/oynqiuq4a9k51.jpg?width=640&crop=smart&auto=webp&s=fb64945028dd789dc71031040a114f95025e65d7"
-    github_run_number: "{{ lookup('env','GITHUB_RUN_NUMBER') | default('local') }}"
-
   tasks:
-    - name: Créer répertoire site
+    - name: Créer le dossier du site
       file:
-        path: ./site
+        path: site
         state: directory
 
-    - name: Générer page index.html interactive
-      copy:
-        dest: ./site/index.html
-        content: |
-          <!DOCTYPE html>
-          <html lang="fr">
-          <head>
-            <meta charset="UTF-8">
-            <title>Démo Ansible + GitHub Pages</title>
-            <style>
-              body {
-                font-family: Arial, sans-serif;
-                background-color: #f4f4f9;
-                color: #333;
-                margin: 0;
-                padding-bottom: 80px; /* espace pour footer */
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-              }
-              h1 {
-                color: #2c3e50;
-              }
-              .info {
-                background-color: #ecf0f1;
-                padding: 1em 2em;
-                border-radius: 10px;
-                margin-top: 1em;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-                text-align: center;
-              }
-              button {
-                margin-top: 0.5em;
-                padding: 0.5em 1em;
-                font-size: 1em;
-                border: none;
-                border-radius: 5px;
-                background-color: #3498db;
-                color: white;
-                cursor: pointer;
-              }
-              button:hover {
-                background-color: #2980b9;
-              }
-              a {
-                display: inline-block;
-                margin-top: 0.5em;
-                text-decoration: none;
-                color: #3498db;
-              }
-              a:hover {
-                text-decoration: underline;
-              }
-              img {
-                margin-top: 2em;
-                max-width: 90%;
-                border-radius: 10px;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-              }
-              footer {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                width: 100%;
-                background-color: #2c3e50;
-                color: white;
-                text-align: center;
-                padding: 10px 0;
-                font-size: 0.9em;
-                box-shadow: 0 -2px 5px rgba(0,0,0,0.2);
-              }
-            </style>
-          </head>
-          <body>
-            <h1>Site déployé via Ansible + GitHub Actions</h1>
-            <div class="info">
-              <p>Accessible publiquement grâce à GitHub Pages !</p>
-              <img src="{{ image_url }}" alt="Image démo"><br>
-              <button onclick="location.reload()">🔄 Rafraîchir la page</button>
-              <a href="{{ repo_url }}" target="_blank">Voir le dépôt GitHub</a>
-            </div>
-            <footer>
-              Déploiement : {{ deploy_date }} | Commit : {{ git_commit }} | Build #{{ github_run_number }}
-            </footer>
-          </body>
-          </html>
-
-    - name: Créer fichier .nojekyll
-      copy:
-        dest: ./site/.nojekyll
-        content: ""
+    - name: Générer la page HTML
+      template:
+        src: templates/index.html.j2
+        dest: site/index.html

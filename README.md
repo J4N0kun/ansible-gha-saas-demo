@@ -1,156 +1,186 @@
-# **Procédure POC Ansible + GitHub Actions + GitHub Pages**
+# 🚀 Déploiement GitHub Pages avec Ansible + GitHub Actions
 
-## **Pré-requis**
+Ce guide explique pas à pas comment mettre en place un dépôt GitHub qui déploie automatiquement un site statique sur **GitHub Pages** grâce à **Ansible** et **GitHub Actions**.
 
-Avant de commencer, assure-toi de disposer de :
+* * *
 
-1.  **Un compte GitHub** et d’un dépôt pour le projet.
+## 🛠️ Prérequis
+
+- Un compte GitHub
     
-2.  **Git installé** sur ta machine locale.
+- [Git](https://git-scm.com/) installé sur ta machine locale
     
-3.  **Python et Ansible** si tu souhaites tester le playbook localement.
+- GitHub Pages activé dans **Settings > Pages** du dépôt (sur la branche `gh-pages`)
     
-4.  **GitHub Actions activé** sur le dépôt.
-    
-5.  **GitHub Pages activé** :
-    
-    - Branche : `gh-pages`
-        
-    - Source : `/ (root)`
-        
-6.  **Secrets GitHub** configurés :
-    
-    - `GITHUB_TOKEN` (fourni automatiquement par GitHub Actions, utilisé pour pousser sur `gh-pages`).
-7.  Facultatif : **ngrok** si tu veux exposer ton site localement pour test avant déploiement.
+- Aucun secret à configurer (on utilise le `GITHUB_TOKEN` fourni automatiquement)
     
 
 * * *
 
-## **1️⃣ Créer et initialiser le dépôt Git**
+## 📝 Étapes détaillées
 
-1.  Crée un dossier pour ton projet et place-toi dedans :
+### 1\. Créer un nouveau projet local
 
-`mkdir ansible-gha-saas-demo`
+`# Créer un nouveau dossier`
 
-`cd ansible-gha-saas-demo`
+`mkdir mon-projet`
 
-2.  Initialise le dépôt Git et ajoute l’URL de ton dépôt GitHub (remplace `<utilisateur>` par ton nom GitHub) :
+`cd mon-projet`
+
+`# Initialiser Git`
 
 `git init`
 
-`git remote add origin https://github.com/<utilisateur>/ansible-gha-saas-demo.git`
+`# Créer un premier commit vide`
+
+`git commit --allow-empty -m "Initial commit"`
 
 * * *
 
-## **2️⃣ Créer l’inventaire Ansible**
+### 2\. Créer le dépôt GitHub distant
 
-Pour un POC local, crée un fichier `inventory.ini` :
+Sur GitHub :
 
-`[local]localhost ansible_connection=local`
+- Clique sur **New Repository**
+    
+- Donne-lui un nom (ex: `ansible-ghpages-demo`)
+    
+- Ne coche **aucune case d’initialisation** (README, licence, .gitignore)
+    
 
-> Si aucun inventaire n’est fourni, Ansible utilisera `localhost` par défaut. Les warnings *No inventory was parsed* et *provided hosts list is empty* sont normaux.
+Puis connecte ton dépôt local au dépôt distant :
+
+`git remote add origin https://github.com/<utilisateur>/<repo>.git`
+
+`git branch -M main`
+
+`git push -u origin main`
 
 * * *
 
-## **3️⃣ Créer le playbook Ansible**
+### 3\. Créer la structure du projet
 
-Crée `deploy.yml` pour générer ton site HTML avec :
+`mkdir -p .github/workflows`
 
-- Date et heure du déploiement
-    
-- Commit Git
-    
-- Numéro du build GitHub Actions
-    
-- Image centrale
-    
-- Boutons « Rafraîchir » et « Voir le dépôt GitHub »
-    
-- Fichier `.nojekyll` pour GitHub Pages
-    
+`mkdir templates`
 
-> Assure-toi que le playbook crée bien le dossier `site/` avant de copier le fichier HTML.
+`touch deploy.yml`
+
+`touch templates/index.html.j2`
+
+`touch .github/workflows/deploy.yml`
 
 * * *
 
-## **4️⃣ Tester le playbook localement**
-
-`ansible-playbook -i inventory.ini deploy.yml`
-
-Vérifie que le dossier `site/` contient `index.html` et `.nojekyll`.
-
-* * *
-
-## **5️⃣ Créer le workflow GitHub Actions**
-
-Crée `.github/workflows/deploy.yml` :
-
-- Déclenché à chaque push sur `main`.
-    
-- Installe Python et Ansible.
-    
-- Exécute le playbook.
-    
-- Déploie le contenu de `site/` sur la branche `gh-pages`.
-    
+### 4\. Ajouter le playbook Ansible (`deploy.yml`)
+`- name: Deploy site to GitHub Pages
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Create site directory
+      file:
+        path: site
+        state: directory
+    - name: Generate index.html from template
+      template:
+        src: templates/index.html.j2
+        dest: site/index.html
+      vars:
+        repo_url: "https://github.com/{{ lookup('env','GITHUB_REPOSITORY') }}"
+        pages_url: "https://{{ lookup('env','GITHUB_REPOSITORY_OWNER') }}.github.io/{{ lookup('env','GITHUB_REPOSITORY').split('/')[-1] }}"
+        commit_sha: "{{ lookup('env','GITHUB_SHA') }}"
+        build_date: "{{ lookup('pipe','date') }}"`
 
 * * *
 
-## **6️⃣ Configurer GitHub Pages**
+### 5\. Créer le template HTML (`templates/index.html.j2`)
 
-- Dans **Settings → Pages** :
-    
-    - Source : branche `gh-pages`
-        
-    - Dossier : `/ (root)`
-        
-- Assure-toi que ton site HTML est à la racine (`index.html` dans `site/` sera copié à la racine de `gh-pages`).
-    
-- L’URL du site sera :
-    
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🚀 Déploiement GitHub Pages</title>
+</head>
+<body>
+    <h1>🚀 Déploiement GitHub Pages avec Ansible</h1>
+    <p>📅 Déployé le : {{ build_date }}</p>
+    <p>🔖 Commit : {{ commit_sha }}</p>
+    <p>🔗 <a href="{{ repo_url }}">Lien vers le dépôt GitHub</a></p>
+    <p>🌍 <a href="{{ pages_url }}">Lien vers la page GitHub Pages</a></p>
+    <img src="https://media.giphy.com/media/13HgwGsXF0aiGY/giphy.gif" alt="fun image" />
+</body>
+</html>
 
-`https://<utilisateur>.github.io/ansible-gha-saas-demo/`
-
-* * *
-
-## **7️⃣ Déploiement automatique**
-
-- Chaque push sur `main` déclenche le workflow GitHub Actions.
-    
-- Le contenu de `site/` est généré et poussé sur `gh-pages`.
-    
-- Tu peux vérifier le succès du workflow dans **Actions → dernier run**.
-    
 
 * * *
 
-## **8️⃣ Fonctionnalités du site**
+### 6\. Créer le workflow GitHub Actions (`.github/workflows/deploy.yml`)
 
-- Image centrale avec léger style CSS.
-    
-- Bouton **Rafraîchir la page**.
-    
-- Lien vers le **dépôt GitHub**.
-    
-- Footer fixe avec :
-    
-    - Date et heure du déploiement
-        
-    - Commit Git
-        
-    - Numéro du build GitHub Actions
-        
+`name: Deploy to GitHub Pages
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install Ansible
+        run: pip install ansible
+      - name: Run Ansible playbook
+        run: ansible-playbook deploy.yml
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site`
 
 * * *
 
-## **9️⃣ Conseils et astuces**
+### 7\. Ajouter et pousser le code
 
-- Pour tester le site localement, tu peux utiliser :
+`git add .`
 
-`python -m http.server 8080`
+`git commit -m "Ajout du workflow GitHub Actions et du playbook Ansible"`
 
-dans le dossier `site/` et éventuellement exposer via ngrok.
+`git push origin main`
 
-- Vérifie bien que `.nojekyll` est présent pour éviter que GitHub Pages ignore certains fichiers.
+* * *
+
+### 8\. Activer GitHub Pages
+
+- Aller dans **Settings > Pages**
     
-- Chaque push redéploie automatiquement le site.
+- Sélectionner la branche `gh-pages`
+    
+- Sauvegarder
+    
+
+* * *
+
+### 9\. Vérifier le déploiement
+
+Une fois le workflow terminé, ton site est disponible à l’adresse :
+
+👉 `https://<utilisateur>.github.io/<repo>/`
+
+* * *
+
+## ✅ Résultat attendu
+
+La page générée contient :
+
+- La date et l’heure du déploiement
+    
+- Le hash du commit déployé
+    
+- Un lien vers le dépôt GitHub
+    
+- Un lien vers la page GitHub Pages
+    
+- Une image fun 😎
