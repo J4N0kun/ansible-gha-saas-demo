@@ -1,0 +1,36 @@
+---
+- name: Démo Ansible dans GitHub Actions avec accès public
+  hosts: all
+  become: yes
+  tasks:
+    - name: Installer Docker
+      apt:
+        name: docker.io
+        state: present
+        update_cache: yes
+
+    - name: S'assurer que Docker est démarré
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Créer un répertoire pour la page web
+      file:
+        path: /tmp/html
+        state: directory
+
+    - name: Créer une page d'accueil custom
+      copy:
+        dest: /tmp/html/index.html
+        content: "<h1>🚀 Déployé avec Ansible dans GitHub Actions et accessible publiquement 🌍</h1>"
+
+    - name: Lancer un conteneur nginx
+      community.docker.docker_container:
+        name: demo-nginx
+        image: nginx:latest
+        state: started
+        ports:
+          - "8080:80"
+        volumes:
+          - /tmp/html:/usr/share/nginx/html

@@ -1,0 +1,76 @@
+name: Deploy with Ansible and expose publicly
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  ansible-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Installer Ansible + Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible python3-docker docker.io jq unzip curl
+          ansible-galaxy collection install community.docker
+
+      - name: Lancer le playbook
+        run: ansible-playbook -i inventory.ini deploy.yml
+
+      - name: Installer ngrok
+        env:
+          NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
+        run: |
+          # Télécharger binaire ngrok (v3 puis fallback v2)
+          set -e
+          if curl -fsSL -o ngrok.tgz https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-linux-amd64.tgz; then
+            tar -xzf ngrok.tgz
+          else
+            curl -fsSL -o ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
+            unzip -o ngrok.zip
+          fi
+          sudo mv ngrok /usr/local/bin/ngrok
+          ngrok config add-authtoken "$NGROK_AUTHTOKEN"
+
+      - name: Démarrer le tunnel et publier l'URL
+        id: tunnel
+        run: |
+          nohup ngrok http 8080 --log=stdout > ngrok.log 2>&1 &
+          # attendre l'API ngrok et récupérer l'URL publique
+          for i in $(seq 1 30); do
+            sleep 1
+            URL=$(curl -s http://127.0.0.1:4040/api/tunnels | python3 - <<'PY'
+import sys, json
+try:
+  data=json.load(sys.stdin)
+  tunnels=data.get("tunnels",[])
+  https=[t for t in tunnels if t.get("proto")=="https"]
+  print(https[0]["public_url"] if https else "")
+except Exception:
+  print("")
+PY
+)
+            if [ -n "$URL" ]; then echo "$URL" > public_url.txt; break; fi
+          done
+          echo "Public URL: $(cat public_url.txt)"
+          echo "public_url=$(cat public_url.txt)" >> $GITHUB_OUTPUT
+          echo "🔗 Public URL: $(cat public_url.txt)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Uploader l'URL publique
+        uses: actions/upload-artifact@v3
+        with:
+          name: public-url
+          path: public_url.txt
+
+      - name: Uploader la page web
+        uses: actions/upload-artifact@v3
+        with:
+          name: website
+          path: /tmp/html/index.html
+
+      - name: Laisser le tunnel ouvert 10 minutes (démo)
+        run: sleep 600
