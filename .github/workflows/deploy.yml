@@ -1,9 +1,10 @@
-name: Déploiement GitHub Pages via Ansible
+name: Deploy Site
 
 on:
   push:
     branches:
-      - main
+      - main  # Déploie à chaque push sur la branche main
+  workflow_dispatch:  # Permet un déclenchement manuel
 
 jobs:
   deploy:
@@ -11,7 +12,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -21,9 +22,14 @@ jobs:
       - name: Install Ansible
         run: |
           python -m pip install --upgrade pip
-          pip install ansible
+          pip install ansible jinja2
 
       - name: Run Ansible playbook
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: ansible-playbook -i inventory.ini deploy.yml
+        run: ansible-playbook -i localhost, deploy.yml
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          publish_branch: gh-pages
