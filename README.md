@@ -30,11 +30,13 @@ Avant de commencer, assure-toi de disposer de :
 
 1.  Crée un dossier pour ton projet et place-toi dedans :
 
-`mkdir ansible-gha-saas-democd ansible-gha-saas-demo`
+`mkdir ansible-gha-saas-demo
+cd ansible-gha-saas-demo`
 
 2.  Initialise le dépôt Git et ajoute l’URL de ton dépôt GitHub (remplace `<utilisateur>` par ton nom GitHub) :
 
-`git initgit remote add origin https://github.com/<utilisateur>/ansible-gha-saas-demo.git`
+`git init
+git remote add origin https://github.com/<utilisateur>/ansible-gha-saas-demo.git`
 
 * * *
 
