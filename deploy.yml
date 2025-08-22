@@ -7,7 +7,7 @@
   vars:
     deploy_date: "{{ lookup('pipe', 'date +\"%Y-%m-%d %H:%M:%S\"') }}"
     git_commit: "{{ lookup('pipe', 'git rev-parse --short HEAD') }}"
-    repo_url: "https://github.com/J4N0kun/ansible-gha-saas-demo"
+    repo_url: "https://github.com/$GITHUB_REPOSITORY"
     image_url: "https://preview.redd.it/oynqiuq4a9k51.jpg?width=640&crop=smart&auto=webp&s=fb64945028dd789dc71031040a114f95025e65d7"
     github_run_number: "{{ lookup('env','GITHUB_RUN_NUMBER') | default('local') }}"
 

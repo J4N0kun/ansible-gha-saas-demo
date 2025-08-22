@@ -28,4 +28,7 @@ jobs:
           publish_dir: ./site
 
       - name: Show GitHub Pages URL
-        run: echo "✅ Site accessible ici --> https://j4n0kun.github.io/ansible-gha-saas-demo/"
+        run: |
+          USER=$(echo $GITHUB_REPOSITORY | cut -d/ -f1)
+          REPO=$(echo $GITHUB_REPOSITORY | cut -d/ -f2)
+          echo "Ton site GitHub Pages : https://${USER}.github.io/${REPO}/"
