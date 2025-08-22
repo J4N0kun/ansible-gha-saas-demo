@@ -1,4 +1,4 @@
-name: Deploy GitHub Pages
+name: Déploiement GitHub Pages via Ansible
 
 on:
   push:
@@ -9,10 +9,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    env:
-      GITHUB_USER: ${{ github.repository_owner }}
-      GITHUB_REPO_NAME: ${{ github.event.repository.name }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -20,7 +16,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.13'
+          python-version: 3.13
 
       - name: Install Ansible
         run: |
@@ -30,5 +26,4 @@ jobs:
       - name: Run Ansible playbook
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: |
-          ansible-playbook -i inventory.ini deploy.yml
+        run: ansible-playbook -i localhost, deploy.yml

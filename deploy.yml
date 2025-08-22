@@ -1,38 +1,82 @@
 ---
 - name: Déploiement d’un site statique avec GitHub Pages
   hosts: localhost
-  vars_files:
-    - vars.yml
-  tasks:
+  gather_facts: false
+  vars:
+    github_user: "J4N0kun"             # Remplace par ton user GitHub
+    repo_name: "ansible-gha-saas-demo" # Remplace par ton repo
+    site_dir: "{{ playbook_dir }}/site"
+    template_file: "{{ playbook_dir }}/templates/index.j2"
 
+  tasks:
     - name: Créer le dossier site s'il n'existe pas
       file:
-        path: ./site
+        path: "{{ site_dir }}"
         state: directory
 
     - name: Récupérer le commit Git courant
       command: git rev-parse --short HEAD
-      register: git_commit_result
+      register: git_commit
+      failed_when: false
 
     - name: Générer la date courante
       command: date "+%d/%m/%Y %H:%M:%S"
-      register: build_date_result
+      register: git_date
 
     - name: Générer le fichier HTML via template Jinja2
       template:
-        src: templates/index.j2
-        dest: site/index.html
+        src: "{{ template_file }}"
+        dest: "{{ site_dir }}/index.html"
       vars:
-        git_commit: "{{ git_commit_result.stdout }}"
-        build_date: "{{ build_date_result.stdout }}"
+        commit: "{{ git_commit.stdout | default('N/A') }}"
+        date: "{{ git_date.stdout | default('N/A') }}"
+        github_user: "{{ github_user }}"
+        repo_name: "{{ repo_name }}"
 
     - name: Initialiser le dépôt Git si nécessaire
-      git:
-        repo: "https://github.com/{{ github_user }}/{{ repo_name }}.git"
-        dest: .
-        init: yes
-        update: yes
+      command: git init
+      args:
+        chdir: "{{ playbook_dir }}"
+      register: git_init
+      failed_when: false
 
     - name: Ajouter l’origine distante si elle n’existe pas
-      command: git remote add origin "https://github.com/{{ github_user }}/{{ repo_name }}.git"
-      ignore_errors: yes
+      command: git remote add origin "https://{{ github_user }}:${GH_TOKEN}@github.com/{{ github_user }}/{{ repo_name }}.git"
+      args:
+        chdir: "{{ playbook_dir }}"
+      failed_when: false
+
+    - name: Vérifier si la branche gh-pages existe
+      command: git rev-parse --verify gh-pages
+      args:
+        chdir: "{{ playbook_dir }}"
+      register: gh_pages_branch
+      failed_when: false
+
+    - name: Créer ou basculer sur la branche gh-pages
+      command: git checkout -B gh-pages
+      args:
+        chdir: "{{ playbook_dir }}"
+
+    - name: Copier les fichiers générés dans le dépôt
+      copy:
+        src: "{{ site_dir }}/"
+        dest: "{{ playbook_dir }}/"
+        remote_src: yes
+        force: yes
+
+    - name: Ajouter tous les fichiers
+      command: git add -A
+      args:
+        chdir: "{{ playbook_dir }}"
+
+    - name: Commit des modifications
+      command: git commit -m "Déploiement site GitHub Pages - {{ git_date.stdout | default('N/A') }}"
+      args:
+        chdir: "{{ playbook_dir }}"
+      failed_when: false
+
+    - name: Push vers gh-pages
+      command: git push -u origin gh-pages --force
+      args:
+        chdir: "{{ playbook_dir }}"

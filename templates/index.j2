@@ -1,18 +1,51 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Démo Ansible GitHub Pages</title>
+  <meta charset="UTF-8">
+  <title>Mon site GitHub Pages</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 40px;
+    }
+    img {
+      max-width: 80%;
+      height: auto;
+      margin-top: 20px;
+    }
+    .buttons {
+      margin-top: 20px;
+    }
+    .buttons a {
+      display: inline-block;
+      margin: 5px;
+      padding: 10px 20px;
+      text-decoration: none;
+      color: white;
+      background-color: #0366d6;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+    .buttons a:hover {
+      background-color: #024e9d;
+    }
+  </style>
 </head>
 <body>
-    <h1>Démo Ansible GitHub Pages</h1>
-    <p>Déployé par {{ github_user }}</p>
-    <p>Commit : {{ git_commit }}</p>
-    <p>Date : {{ build_date }}</p>
+  <h1>Mon site déployé avec Ansible & GitHub Pages</h1>
+  <p><strong>Commit :</strong> {{ commit }}</p>
+  <p><strong>Date :</strong> {{ date }}</p>
+  <p><strong>GitHub repo :</strong> 
+    <a href="https://github.com/{{ github_user }}/{{ repo_name }}">{{ repo_name }}</a>
+  </p>
 
-    <img src="https://preview.redd.it/oynqiuq4a9k51.jpg?width=640&crop=smart&auto=webp&s=fb64945028dd789dc71031040a114f95025e65d7" alt="Image démo">
-    <br><br>
-    <a href="">🔄 Rafraîchir la page</a>
-    <a href="https://github.com/{{ github_user }}/{{ repo_name }}">Voir le dépôt GitHub</a>
+  <img src="https://preview.redd.it/oynqiuq4a9k51.jpg?width=640&crop=smart&auto=webp&s=fb64945028dd789dc71031040a114f95025e65d7" alt="Image décorative">
+  <br><br>
+
+  <div class="buttons">
+    <a href="" onclick="location.reload();return false;">🔄 Rafraîchir la page</a>
+    <a href="https://github.com/{{ github_user }}/{{ repo_name }}" target="_blank">Voir le dépôt GitHub</a>
+  </div>
 </body>
 </html>
