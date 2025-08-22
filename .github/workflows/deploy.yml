@@ -15,18 +15,9 @@ jobs:
       - name: Install Ansible + dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ansible python3-docker
+          sudo apt-get install -y ansible python3-docker unzip curl jq
+          ansible-galaxy collection install community.docker        
 
-          # Installer la collection Ansible pour Docker
-          ansible-galaxy collection install community.docker
-
-      - name: Fix Docker installation (remove conflicting containerd)
-        run: |
-          sudo apt-get remove -y containerd || true
-          sudo apt-get install -y docker.io
-          sudo systemctl start docker
-          sudo systemctl enable docker
-          docker --version
       - name: Lancer le playbook
         run: ansible-playbook -i inventory.ini deploy.yml
 
