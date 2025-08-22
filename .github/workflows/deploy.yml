@@ -1,4 +1,4 @@
-name: Deploy with Ansible in SaaS mode
+name: Deploy with Ansible + Ngrok
 
 on:
   push:
@@ -9,18 +9,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout du repo
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2️⃣ Installer Ansible + dépendances
       - name: Install Ansible + dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y ansible python3-docker unzip curl jq
           ansible-galaxy collection install community.docker
 
+      # 3️⃣ Lancer le playbook pour créer le conteneur web
       - name: Run Ansible playbook
         run: ansible-playbook -i inventory.ini deploy.yml
 
+      # 4️⃣ Télécharger et configurer Ngrok
       - name: Download & setup Ngrok
         run: |
           curl -s https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz -o ngrok.tgz
@@ -31,16 +35,17 @@ jobs:
         env:
           NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
 
+      # 5️⃣ Lancer Ngrok et récupérer l'URL publique avec retry
       - name: Start Ngrok tunnel (HTTP on port 8080)
         run: |
           nohup ngrok http 8080 --log=stdout > ngrok.log &
-          # retry loop pour attendre que le port du conteneur soit joignable
+          # attendre que le port du conteneur soit joignable
           for i in {1..15}; do
             nc -z localhost 8080 && break
             echo "Waiting for container on port 8080..."
             sleep 2
           done
-          # retry loop pour attendre que l'API Ngrok renvoie le tunnel
+          # attendre que l'API Ngrok renvoie le tunnel
           for i in {1..15}; do
             URL=$(curl --silent http://127.0.0.1:4040/api/tunnels \
               | jq -r '.tunnels[] | select(.proto=="https") | .public_url')
@@ -52,7 +57,8 @@ jobs:
             sleep 2
           done
 
-      - name: Upload generated website
+      # 6️⃣ Upload de la page HTML générée
+      - name: Upload generated website (artefact)
         uses: actions/upload-artifact@v4
         with:
           name: website

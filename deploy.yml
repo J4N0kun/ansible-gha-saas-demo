@@ -1,5 +1,5 @@
 ---
-- name: Démo Ansible dans GitHub Actions avec accès public
+- name: Démo Ansible + Ngrok dans GitHub Actions
   hosts: localhost
   connection: local
   gather_facts: yes
@@ -12,22 +12,24 @@
         state: started
         restart_policy: unless-stopped
         published_ports:
-          - "8080:80"   # exposer le port 80 du conteneur sur 8080 de l'hôte
+          - "8080:80"
 
-    - name: Créer le répertoire /tmp/html
+    - name: Copier une page HTML directement dans le conteneur Nginx
+      community.docker.docker_container_exec:
+        container: demo-web
+        command: >
+          /bin/sh -c "echo '<html><head><title>Démo Ansible + Ngrok</title></head>
+          <body><h1>Conteneur web déployé via Ansible</h1>
+          <p>Accessible publiquement grâce à Ngrok !</p></body></html>'
+          > /usr/share/nginx/html/index.html"
+
+    - name: Créer un répertoire temporaire pour l'artefact (optionnel)
       file:
         path: /tmp/html
         state: directory
         mode: '0755'
 
-    - name: Copier une page HTML de démo
+    - name: Copier une page HTML pour artefact (optionnel)
       copy:
         dest: /tmp/html/index.html
-        content: |
-          <html>
-            <head><title>Démo Ansible + Ngrok</title></head>
-            <body>
-              <h1>Conteneur web déployé via Ansible</h1>
-              <p>Accessible publiquement grâce à Ngrok !</p>
-            </body>
-          </html>
+        content: "<html><body>Demo Ansible + Ngrok</body></html>"
