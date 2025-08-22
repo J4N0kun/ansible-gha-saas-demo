@@ -1,14 +1,55 @@
-- hosts: localhost
+---
+- name: Déploiement d’un site statique avec GitHub Pages
+  hosts: localhost
   connection: local
-  gather_facts: no
+  gather_facts: false
+  vars:
+    repo_url: "https://github.com/{{ lookup('env', 'GITHUB_REPOSITORY') }}"
+    repo_name: "{{ lookup('env', 'GITHUB_REPOSITORY') | regex_replace('.*/', '') }}"
+    site_dir: "./site"
 
   tasks:
-    - name: Créer le dossier du site
-      file:
-        path: site
+
+    - name: Vérifier si un dépôt Git existe
+      ansible.builtin.stat:
+        path: ".git"
+      register: git_status
+
+    - name: Initialiser le dépôt Git si nécessaire
+      ansible.builtin.command: git init
+      when: not git_status.stat.exists
+
+    - name: Ajouter l’origine distante
+      ansible.builtin.command: git remote add origin {{ repo_url }}
+      ignore_errors: true
+
+    - name: Vérifier la version d'Ansible installée avec uv
+      ansible.builtin.command: ansible --version
+      register: ansible_version
+      changed_when: false
+
+    - name: Afficher la version d'Ansible
+      ansible.builtin.debug:
+        msg: "Ansible est bien installé via uv : {{ ansible_version.stdout_lines[0] }}"
+
+    - name: Créer le répertoire du site
+      ansible.builtin.file:
+        path: "{{ site_dir }}"
         state: directory
 
-    - name: Générer la page HTML
-      template:
+    - name: Générer la page index.html depuis un template
+      ansible.builtin.template:
         src: templates/index.html.j2
-        dest: site/index.html
+        dest: "{{ site_dir }}/index.html"
+        mode: "0644"
+        
+    - name: Ajouter les fichiers au commit
+      ansible.builtin.command: git add .
+
+    - name: Commit initial
+      ansible.builtin.command: git commit -m "Initial commit"
+      ignore_errors: true
+
+    - name: Pousser sur GitHub
+      ansible.builtin.command: git push -u origin main
+      ignore_errors: true
