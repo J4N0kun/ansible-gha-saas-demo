@@ -1,31 +1,27 @@
 ---
 - name: Démo Ansible dans GitHub Actions avec accès public
-  hosts: all
-  become: yes
+  hosts: localhost
+  connection: local
+  gather_facts: yes
+
   tasks:
-
-    - name: S'assurer que Docker est démarré
-      service:
-        name: docker
-        state: started
-        enabled: yes
-
-    - name: Créer un répertoire pour la page web
-      file:
-        path: /tmp/html
-        state: directory
-
-    - name: Créer une page d'accueil custom
-      copy:
-        dest: /tmp/html/index.html
-        content: "<h1>🚀 Youhou! Déployé avec Ansible dans GitHub Actions et accessible publiquement 🌍</h1>"
-
-    - name: Lancer un conteneur nginx
+    - name: Créer un conteneur Nginx pour la démo
       community.docker.docker_container:
-        name: demo-nginx
+        name: demo-web
         image: nginx:latest
         state: started
-        ports:
-          - "8080:80"
-        volumes:
-          - /tmp/html:/usr/share/nginx/html
+        restart_policy: unless-stopped
+        published_ports:
+          - "8080:80"    # expose le port 80 du conteneur sur 8080 de l'hôte
+
+    - name: Copier une page HTML de démo
+      copy:
+        dest: /tmp/html/index.html
+        content: |
+          <html>
+            <head><title>Démo Ansible + Ngrok</title></head>
+            <body>
+              <h1>Conteneur web déployé via Ansible</h1>
+              <p>Accessible publiquement grâce à Ngrok !</p>
+            </body>
+          </html>
