@@ -25,7 +25,7 @@
     - name: Générer le fichier HTML via template Jinja2
       template:
         src: templates/index.j2
-        dest: "{{ site_dir }}/index.html"
+        dest: site/index.html
       vars:
         commit: "{{ git_commit.stdout }}"
         date: "{{ current_date.stdout }}"
