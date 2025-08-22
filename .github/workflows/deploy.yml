@@ -35,20 +35,21 @@ jobs:
         env:
           NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
 
-      # 5️⃣ Lancer Ngrok après que le conteneur soit prêt
+      # 5️⃣ Lancer Ngrok et récupérer l'URL publique avec retry
       - name: Start Ngrok tunnel (HTTP on port 8080)
         run: |
           nohup ngrok http 8080 --log=stdout > ngrok.log &
-          # attendre que le port 8080 soit joignable
+          # retry loop pour attendre que le tunnel soit actif
           for i in {1..15}; do
-            nc -z localhost 8080 && break
-            echo "Waiting for port 8080..."
+            URL=$(curl --silent http://127.0.0.1:4040/api/tunnels \
+              | jq -r '.tunnels[] | select(.proto=="https") | .public_url')
+            if [ -n "$URL" ]; then
+              echo "Ngrok public URL: $URL"
+              break
+            fi
+            echo "Waiting for Ngrok API..."
             sleep 2
           done
-          echo "----- Ngrok Tunnel Info -----"
-          curl --silent http://127.0.0.1:4040/api/tunnels \
-            | jq -r '.tunnels[] | select(.proto=="https") | .public_url' \
-            | head -n1
 
       # 6️⃣ Upload de la page HTML générée
       - name: Upload generated website
