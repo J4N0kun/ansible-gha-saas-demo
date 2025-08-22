@@ -5,16 +5,14 @@
     <title>Démo Ansible GitHub Pages</title>
 </head>
 <body>
-    <h1>Bienvenue sur la démo Ansible</h1>
-    <p>Date de déploiement : {{ date }}</p>
-    <p>Commit Git : {{ commit }}</p>
+    <h1>Démo Ansible GitHub Pages</h1>
+    <p>Déployé par {{ github_user }}</p>
+    <p>Commit : {{ git_commit }}</p>
+    <p>Date : {{ build_date }}</p>
 
     <img src="https://preview.redd.it/oynqiuq4a9k51.jpg?width=640&crop=smart&auto=webp&s=fb64945028dd789dc71031040a114f95025e65d7" alt="Image démo">
     <br><br>
-
-    <!-- Liens dynamiques -->
-    <a href="#" onclick="location.reload()">🔄 Rafraîchir la page</a> |
-    <a href="https://github.com/{{ github_user }}/{{ github_repo_name }}">Voir le dépôt GitHub</a> |
-    <a href="https://{{ github_user }}.github.io/{{ github_repo_name }}/">Voir la page GitHub Pages</a>
+    <a href="">🔄 Rafraîchir la page</a>
+    <a href="https://github.com/{{ github_user }}/{{ repo_name }}">Voir le dépôt GitHub</a>
 </body>
 </html>

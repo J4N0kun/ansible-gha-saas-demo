@@ -1,55 +1,38 @@
 ---
 - name: Déploiement d’un site statique avec GitHub Pages
   hosts: localhost
-  vars:
-    github_user: "J4N0kun"           # Remplace par ton nom d'utilisateur GitHub
-    github_repo_name: "ansible-gha-saas-demo"  # Nom du repo
-    site_dir: "./site"
-
+  vars_files:
+    - vars.yml
   tasks:
 
     - name: Créer le dossier site s'il n'existe pas
       file:
-        path: "{{ site_dir }}"
+        path: ./site
         state: directory
 
     - name: Récupérer le commit Git courant
       command: git rev-parse --short HEAD
-      register: git_commit
+      register: git_commit_result
 
     - name: Générer la date courante
       command: date "+%d/%m/%Y %H:%M:%S"
-      register: current_date
+      register: build_date_result
 
     - name: Générer le fichier HTML via template Jinja2
       template:
-        src: "templates/index.j2"
-        dest: "{{ site_dir }}/index.html"
+        src: templates/index.j2
+        dest: site/index.html
       vars:
-        commit: "{{ git_commit.stdout }}"
-        date: "{{ current_date.stdout }}"
-        github_user: "{{ github_user }}"
-        github_repo_name: "{{ github_repo_name }}"
+        git_commit: "{{ git_commit_result.stdout }}"
+        build_date: "{{ build_date_result.stdout }}"
 
     - name: Initialiser le dépôt Git si nécessaire
       git:
-        repo: "https://github.com/{{ github_user }}/{{ github_repo_name }}.git"
-        dest: "."
+        repo: "https://github.com/{{ github_user }}/{{ repo_name }}.git"
+        dest: .
         init: yes
         update: yes
-        version: main
-        force: yes
 
     - name: Ajouter l’origine distante si elle n’existe pas
-      command: git remote add origin "https://github.com/{{ github_user }}/{{ github_repo_name }}.git"
+      command: git remote add origin "https://github.com/{{ github_user }}/{{ repo_name }}.git"
       ignore_errors: yes
-
-    - name: Ajouter tous les fichiers et commit
-      command: git add -A && git commit -m "Deploy site {{ current_date.stdout }}"
-      ignore_errors: yes
-
-    - name: Pousser sur la branche gh-pages
-      command: git push origin main:gh-pages --force
-      environment:
-        GIT_ASKPASS: /bin/echo
-        GITHUB_TOKEN: "{{ lookup('env', 'GH_TOKEN') }}"
