@@ -25,7 +25,7 @@ jobs:
           pip install ansible jinja2
 
       - name: Run Ansible playbook
-        run: ansible-playbook -i localhost, deploy.yml
+        run: ansible-playbook -i inventory.ini deploy.yml
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
