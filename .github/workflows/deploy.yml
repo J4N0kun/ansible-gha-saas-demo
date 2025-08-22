@@ -36,30 +36,38 @@ jobs:
           sudo mv ngrok /usr/local/bin/ngrok
           ngrok config add-authtoken "$NGROK_AUTHTOKEN"
 
-      - name: Démarrer le tunnel et publier l'URL
-        id: tunnel
-        run: |
-          nohup ngrok http 8080 --log=stdout > ngrok.log 2>&1 &
-          # attendre l'API ngrok et récupérer l'URL publique
-          for i in $(seq 1 30); do
-            sleep 1
-            URL=$(curl -s http://127.0.0.1:4040/api/tunnels | python3 - <<'PY'
-import sys, json
-try:
-  data=json.load(sys.stdin)
-  tunnels=data.get("tunnels",[])
-  https=[t for t in tunnels if t.get("proto")=="https"]
-  print(https[0]["public_url"] if https else "")
-except Exception:
-  print("")
-PY
-)
-            if [ -n "$URL" ]; then echo "$URL" > public_url.txt; break; fi
-          done
-          echo "Public URL: $(cat public_url.txt)"
-          echo "public_url=$(cat public_url.txt)" >> $GITHUB_OUTPUT
-          echo "🔗 Public URL: $(cat public_url.txt)" >> $GITHUB_STEP_SUMMARY
-
+          - name: Démarrer le tunnel et publier l'URL
+          id: tunnel
+          shell: bash
+          run: |
+            set -euo pipefail
+            nohup ngrok http 8080 --log=stdout > ngrok.log 2>&1 &
+        
+            # Attendre que l'API locale ngrok (4040) soit dispo
+            for i in $(seq 1 30); do
+              sleep 1
+              if curl -fsS http://127.0.0.1:4040/api/tunnels >/dev/null 2>&1; then
+                break
+              fi
+            done
+        
+            # Récupérer la première URL https via l'API locale
+            URL="$(curl -s http://127.0.0.1:4040/api/tunnels \
+              | jq -r '.tunnels[] | select(.proto=="https") | .public_url' \
+              | head -n1)"
+        
+            # Fallback si l'API n'est pas prête : extraire depuis le log
+            if [ -z "$URL" ] && [ -f ngrok.log ]; then
+              URL="$(grep -oE 'https://[0-9a-zA-Z.-]*ngrok[^ ]*' ngrok.log | head -n1 || true)"
+            fi
+        
+            test -n "$URL" || { echo "Impossible de trouver l'URL publique ngrok"; exit 1; }
+        
+            echo "$URL" > public_url.txt
+            echo "Public URL: $URL"
+            echo "public_url=$URL" >> "$GITHUB_OUTPUT"
+            echo "🔗 Public URL: $URL" >> "$GITHUB_STEP_SUMMARY"
+        
       - name: Uploader l'URL publique
         uses: actions/upload-artifact@v3
         with:
