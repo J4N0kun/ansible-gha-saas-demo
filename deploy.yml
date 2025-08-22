@@ -1,5 +1,5 @@
 ---
-- name: Générer site HTML dynamique pour GitHub Pages
+- name: Générer site HTML interactif avec build GitHub Actions
   hosts: localhost
   connection: local
   gather_facts: no
@@ -7,6 +7,9 @@
   vars:
     deploy_date: "{{ lookup('pipe', 'date +\"%Y-%m-%d %H:%M:%S\"') }}"
     git_commit: "{{ lookup('pipe', 'git rev-parse --short HEAD') }}"
+    repo_url: "https://github.com/J4N0kun/ansible-gha-saas-demo"
+    image_url: "https://preview.redd.it/oynqiuq4a9k51.jpg?width=640&crop=smart&auto=webp&s=fb64945028dd789dc71031040a114f95025e65d7"
+    github_run_number: "{{ lookup('env','GITHUB_RUN_NUMBER') | default('local') }}"
 
   tasks:
     - name: Créer répertoire site
@@ -14,18 +17,80 @@
         path: ./site
         state: directory
 
-    - name: Générer page index.html dynamique
+    - name: Générer page index.html interactive avec build info
       copy:
         dest: ./site/index.html
         content: |
-          <html>
-            <head><title>Démo Ansible + GitHub Pages</title></head>
-            <body>
-              <h1>Site déployé via Ansible + GitHub Actions</h1>
-              <p>Date de déploiement : {{ deploy_date }}</p>
-              <p>Commit : {{ git_commit }}</p>
+          <!DOCTYPE html>
+          <html lang="fr">
+          <head>
+            <meta charset="UTF-8">
+            <title>Démo Ansible + GitHub Pages</title>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f9;
+                color: #333;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                margin: 0;
+              }
+              h1 {
+                color: #2c3e50;
+              }
+              .info {
+                background-color: #ecf0f1;
+                padding: 1em 2em;
+                border-radius: 10px;
+                margin-top: 1em;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                text-align: center;
+              }
+              button {
+                margin-top: 1em;
+                padding: 0.5em 1em;
+                font-size: 1em;
+                border: none;
+                border-radius: 5px;
+                background-color: #3498db;
+                color: white;
+                cursor: pointer;
+              }
+              button:hover {
+                background-color: #2980b9;
+              }
+              a {
+                display: inline-block;
+                margin-top: 1em;
+                text-decoration: none;
+                color: #3498db;
+              }
+              a:hover {
+                text-decoration: underline;
+              }
+              img {
+                margin-top: 2em;
+                max-width: 90%;
+                border-radius: 10px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+              }
+            </style>
+          </head>
+          <body>
+            <h1>Site déployé via Ansible + GitHub Actions</h1>
+            <div class="info">
+              <p><strong>Date de déploiement :</strong> {{ deploy_date }}</p>
+              <p><strong>Commit :</strong> {{ git_commit }}</p>
+              <p><strong>Numéro de build :</strong> {{ github_run_number }}</p>
               <p>Accessible publiquement grâce à GitHub Pages !</p>
-            </body>
+              <button onclick="location.reload()">🔄 Rafraîchir la page</button>
+              <a href="{{ repo_url }}" target="_blank">Voir le dépôt GitHub</a>
+              <img src="{{ image_url }}" alt="Image démo">
+            </div>
+          </body>
           </html>
 
     - name: Créer fichier .nojekyll
