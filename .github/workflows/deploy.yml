@@ -1,40 +1,34 @@
-name: Déploiement GitHub Pages via Ansible
+name: Deploy GitHub Pages
 
 on:
   push:
     branches:
-      - main  # ou master selon ton repo
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    steps:
-      # 1️⃣ Checkout du repo
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    env:
+      GITHUB_USER: ${{ github.repository_owner }}
+      GITHUB_REPO_NAME: ${{ github.event.repository.name }}
 
-      # 2️⃣ Installer Python et Ansible
-      - name: Setup Python
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.13'
 
-      - name: Installer Ansible
+      - name: Install Ansible
         run: |
           python -m pip install --upgrade pip
-          pip install ansible jinja2
+          pip install ansible
 
-      # 3️⃣ Exécuter le playbook pour générer le site
-      - name: Exécuter le playbook Ansible
-        run: ansible-playbook deploy.yml
-
-      # 4️⃣ Publier le contenu de ./site sur gh-pages
-      - name: Publier sur GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          publish_dir: ./site
-          # Le token Actions est automatiquement fourni par GitHub
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          # Branche cible pour GitHub Pages
-          publish_branch: gh-pages
+      - name: Run Ansible playbook
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          ansible-playbook -i localhost, deploy.yml

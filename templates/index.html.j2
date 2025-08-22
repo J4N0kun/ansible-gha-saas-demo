@@ -8,9 +8,13 @@
     <h1>Bienvenue sur la démo Ansible</h1>
     <p>Date de déploiement : {{ date }}</p>
     <p>Commit Git : {{ commit }}</p>
+
     <img src="https://preview.redd.it/oynqiuq4a9k51.jpg?width=640&crop=smart&auto=webp&s=fb64945028dd789dc71031040a114f95025e65d7" alt="Image démo">
-    <br>
-    <a href="#">🔄 Rafraîchir la page</a> |
-    <a href="https://github.com/J4N0kun/ansible-gha-saas-demo">Voir le dépôt GitHub</a>
+    <br><br>
+
+    <!-- Liens dynamiques -->
+    <a href="#" onclick="location.reload()">🔄 Rafraîchir la page</a> |
+    <a href="https://github.com/{{ github_user }}/{{ github_repo_name }}">Voir le dépôt GitHub</a> |
+    <a href="https://{{ github_user }}.github.io/{{ github_repo_name }}/">Voir la page GitHub Pages</a>
 </body>
 </html>
