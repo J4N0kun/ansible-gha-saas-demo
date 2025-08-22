@@ -4,28 +4,20 @@ on:
   push:
     branches: [ main ]
 
+permissions:
+  contents: write  # nécessaire pour push sur gh-pages
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
-      # 1️⃣ Checkout du repo
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      # 2️⃣ Installer Ansible + dépendances
+      - uses: actions/checkout@v4
       - name: Install Ansible
         run: sudo apt-get update && sudo apt-get install -y ansible
-
-      # 3️⃣ Lancer le playbook pour créer le conteneur web
-      - name: Run Ansible playbook to generate HTML
+      - name: Run Ansible playbook
         run: ansible-playbook deploy.yml
-
-      # 4️⃣ Déployer la page HTML sur GitHub Pages
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./site
-          # Optionnel : branch cible, défaut gh-pages
-          # publish_branch: gh-pages
