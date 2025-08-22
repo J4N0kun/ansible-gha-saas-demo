@@ -13,15 +13,17 @@
     - name: Vérifier si un dépôt Git existe
       ansible.builtin.stat:
         path: ".git"
-      register: git_status
+      register: git_repo
 
     - name: Initialiser le dépôt Git si nécessaire
       ansible.builtin.command: git init
-      when: not git_status.stat.exists
+      when: not git_repo.stat.exists
 
-    - name: Ajouter l’origine distante
+    - name: Ajouter l’origine distante si elle n’existe pas
       ansible.builtin.command: git remote add origin {{ repo_url }}
-      ignore_errors: true
+      register: add_origin
+      failed_when: add_origin.rc not in [0, 3]  # 3 = remote already exists
+      ignore_errors: yes
 
     - name: Vérifier la version d'Ansible installée avec uv
       ansible.builtin.command: ansible --version
@@ -30,7 +32,7 @@
 
     - name: Afficher la version d'Ansible
       ansible.builtin.debug:
-        msg: "Ansible est bien installé via uv : {{ ansible_version.stdout_lines[0] }}"
+        msg: "Ansible est bien installé via uv : {{ ansible_version.stdout.split('\n')[0] }}"
 
     - name: Créer le répertoire du site
       ansible.builtin.file:
