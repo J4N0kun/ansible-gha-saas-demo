@@ -21,10 +21,10 @@
           <html>
             <head><title>Démo Ansible + GitHub Pages</title></head>
             <body>
-              <h1>Site deploye via Ansible + GitHub Actions</h1>
+              <h1>Site déployé via Ansible + GitHub Actions</h1>
               <p>Date de déploiement : {{ deploy_date }}</p>
               <p>Commit : {{ git_commit }}</p>
-              <p>Accessible publiquement grace a GitHub Pages !</p>
+              <p>Accessible publiquement grâce à GitHub Pages !</p>
             </body>
           </html>
 
