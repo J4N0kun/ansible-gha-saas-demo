@@ -19,7 +19,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y ansible
 
       - name: Run Ansible playbook
-        run: ansible-playbook deploy.yml
+        run: ansible-playbook -i inventory.ini deploy.yml
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3

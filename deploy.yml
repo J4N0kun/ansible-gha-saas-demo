@@ -94,7 +94,7 @@
             <h1>Site déployé via Ansible + GitHub Actions</h1>
             <div class="info">
               <p>Accessible publiquement grâce à GitHub Pages !</p>
-              <img src="{{ image_url }}" alt="Image démo"><br>
+              <img src="{{ image_url }}" alt="Image démo">
               <button onclick="location.reload()">🔄 Rafraîchir la page</button>
               <a href="{{ repo_url }}" target="_blank">Voir le dépôt GitHub</a>
             </div>
