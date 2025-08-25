@@ -1,32 +1,38 @@
 ---
-- name: Déploiement d’un site statique avec GitHub Pages
-  hosts: localhost
-  gather_facts: false
-  vars:
-    github_user: "{{ lookup('env','GITHUB_USER') | default('J4N0kun') }}"
-    github_repo: "{{ lookup('env','GITHUB_REPOSITORY') | default('J4N0kun/ansible-gha-saas-demo') }}"
-    site_dir: site
-    image_url: "https://preview.redd.it/oynqiuq4a9k51.jpg?width=640&crop=smart&auto=webp&s=fb64945028dd789dc71031040a114f95025e65d7"
-
-  tasks:
-    - name: Créer le dossier site s'il n'existe pas
-      file:
-        path: "{{ site_dir }}"
-        state: directory
-
-    - name: Récupérer le commit Git courant
-      command: git rev-parse --short HEAD
-      register: git_commit
-
-    - name: Générer la date courante
-      command: date "+%d/%m/%Y %H:%M:%S"
-      register: current_date
-
-    - name: Générer le fichier HTML via template Jinja2
-      template:
-        src: templates/index.j2
-        dest: ./site/index.html
-      vars:
-        commit: "{{ git_commit.stdout }}"
-        date: "{{ current_date.stdout }}"
-        github_url: "https://github.com/{{ github_repo }}"
+  - name: Déploiement d’un site statique avec GitHub Pages
+    hosts: localhost
+    gather_facts: false
+    vars:
+      github_user: "{{ lookup('env','GITHUB_USER') | default('J4N0kun') }}"
+      github_repo: "{{ lookup('env','GITHUB_REPOSITORY') | default('J4N0kun/ansible-gha-saas-demo') }}"
+      site_dir: site
+      image_url: "https://preview.redd.it/oynqiuq4a9k51.jpg?width=640&crop=smart&auto=webp&s=fb64945028dd789dc71031040a114f95025e65d7"
+  
+    tasks:
+      - name: Créer le dossier site s'il n'existe pas
+        file:
+          path: "{{ site_dir }}"
+          state: directory
+  
+      - name: Récupérer le commit Git courant
+        command: git rev-parse --short HEAD
+        register: git_commit
+  
+      - name: Générer la date courante
+        command: date "+%d/%m/%Y %H:%M:%S"
+        register: current_date
+  
+      - name: Générer le fichier HTML via template Jinja2
+        template:
+          src: templates/index.j2
+          dest: "{{ site_dir }}/index.html"
+        vars:
+          commit: "{{ git_commit.stdout }}"
+          date: "{{ current_date.stdout }}"
+          github_url: "https://github.com/{{ github_repo }}"
+  
+      - name: Ajouter un fichier .nojekyll (utile pour GitHub Pages)
+        copy:
+          dest: "{{ site_dir }}/.nojekyll"
+          content: ""
+  

@@ -1,33 +1,35 @@
-name: Deploy Site
+name: Déploiement GitHub Pages avec Ansible
 
 on:
   push:
     branches:
-      - main  # Déploie à chaque push sur la branche main
-  workflow_dispatch:  # Permet un déclenchement manuel
+      - main  # Déploie quand tu pushes sur main
+
+permissions:
+  contents: write  # ⚠️ important pour que le bot puisse pousser sur gh-pages
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.13
+          python-version: "3.x"
 
-      - name: Install Ansible
+      - name: Installer Ansible
         run: |
           python -m pip install --upgrade pip
-          pip install ansible jinja2
+          pip install ansible
 
-      - name: Run Ansible playbook
-        run: ansible-playbook -i inventory.ini deploy.yml
+      - name: Exécuter le playbook
+        run: ansible-playbook deploy.yml
 
-      - name: Deploy to GitHub Pages
+      - name: Déployer sur GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
