@@ -30,6 +30,8 @@
           commit: "{{ git_commit.stdout }}"
           date: "{{ current_date.stdout }}"
           github_url: "https://github.com/{{ github_repo }}"
+          build: "{{ lookup('env','GITHUB_RUN_NUMBER') | default('local') }}"
+          logo_url: "https://upload.wikimedia.org/wikipedia/commons/2/24/Ansible_logo.svg"
   
       - name: Ajouter un fichier .nojekyll (utile pour GitHub Pages)
         copy:
