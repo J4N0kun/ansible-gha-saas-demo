@@ -147,7 +147,7 @@ jobs:
           pip install ansible
 
       - name: Exécuter le playbook
-        run: ansible-playbook deploy.yml
+        run: ansible-playbook -i inventory.ini deploy.yml
 
       - name: Déployer sur GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
